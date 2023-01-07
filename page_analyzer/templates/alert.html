@@ -1,0 +1,7 @@
+{% if msgs %}
+  {% for ctg, msg in msgs %}
+    <div class="alert {{ ctg }}">
+      {{ msg }}
+    </div>
+  {% endfor %}
+{% endif %}
