@@ -3,6 +3,8 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 import psycopg2
 from datetime import datetime, date
+from bs4 import BeautifulSoup
+import requests
 
 
 load_dotenv()
@@ -144,3 +146,20 @@ def get_checks(id_):
                'date': timestamp_to_date(row[6])} for row in rows]
 
     return checks
+
+
+def parse_seo_data(url: str):
+    """
+    """
+    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+    h1 = soup.h1.get_text()
+    title = soup.title.get_text()
+    content_raw = soup.find("meta", attrs={'name': 'description'})
+    content = '' if content_raw is None else content_raw['content']
+
+    seo_data = {'h1': treat_none(h1),
+                'title': treat_none(title),
+                'content': content
+                }
+
+    return seo_data
