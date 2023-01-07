@@ -5,6 +5,7 @@ from flask import (Flask, render_template, url_for,
                    )
 from validators import url as is_correct
 import page_analyzer.db_logic as db
+import requests
 
 
 load_dotenv()
@@ -61,7 +62,26 @@ def urls_post():
 @app.route('/urls/<int:id>')
 def get_url(id):
     url = db.find_url(id)
-# checks
+    checks = db.get_checks(id)
     msgs = get_flashed_messages(with_categories=True)
 
-    return render_template('url.html', url=url, msgs=msgs)
+    return render_template('url.html', url=url, msgs=msgs, checks=checks)
+
+
+@app.post('/urls/<int:id>/checks')
+def check_url(id):
+    url = db.find_url(id)
+    response = requests.get(url['name'])
+    try:
+        response.raise_for_status()
+        db.check({'id': id,
+                  'status_code': response.status_code
+                  })
+        flash('Страница успешно проверена', 'alert-success')
+
+        return redirect(url_for('get_url', id=id))
+
+    except requests.exceptions.HTTPError:
+        flash('Something wrong', 'alert-danger')
+
+        return redirect(url_for('get_url', id=id))
