@@ -3,4 +3,4 @@
 
 
 
-For checking test build after step 1 follow [this link](https://python-project-83-production-c5ba.up.railway.app/).
+For checking current prod build follow [this link](https://marspageanalyzer.up.railway.app/).
