@@ -15,7 +15,8 @@ app.secret_key = os.getenv('SECRET_KEY')
 
 
 @app.route('/')
-def analyzer():
+@app.route('/index')
+def index():
     return render_template(
         'index.html'
     )
