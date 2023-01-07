@@ -86,6 +86,6 @@ def check_url(id):
         return redirect(url_for('get_url', id=id))
 
     except requests.exceptions.HTTPError:
-        flash('Something wrong', 'alert-danger')
+        flash('Произошла ошибка при проверке', 'alert-danger')
 
         return redirect(url_for('get_url', id=id))
