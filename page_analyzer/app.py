@@ -36,8 +36,6 @@ def urls_post():
 
     if not is_correct(url):
         flash('Некорректный URL', 'alert-danger')
-        if url == '' or url is None:
-            flash('URL обязателен', 'alert-danger')
         msgs = get_flashed_messages(with_categories=True)
 
         return render_template('index.html', url=url, msgs=msgs), 422
