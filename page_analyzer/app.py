@@ -80,10 +80,10 @@ def check_url(id):
         response = requests.get(url['name'])
         seo_data = db.parse_seo_data(url['name'])
         db.check({'id': id,
-                  'status_code': response.status_code,
+                  'code': response.status_code,
                   'h1': seo_data['h1'],
                   'title': seo_data['title'],
-                  'content': seo_data['content'],
+                  'description': seo_data['description'],
                   })
         flash('Страница успешно проверена', 'alert-success')
 

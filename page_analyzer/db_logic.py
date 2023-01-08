@@ -74,14 +74,14 @@ def get_urls():
                         'ON urls.id=url_checks.url_id '
                         'AND url_checks.created_at=(SELECT MAX(created_at) '
                         'FROM url_checks WHERE url_id=urls.id) '
-                        'ORDER BY urls.id'
+                        'ORDER BY urls.id DESC'
                         )
 #           cur.execute('SELECT * FROM urls ORDER BY id')
             rows = cur.fetchall()
     urls = [{'id': row[0],
              'name': row[1],
              'date': treat_none(timestamp_to_date(row[2])),
-             'status': treat_none(row[3])} for row in rows]
+             'code': treat_none(row[3])} for row in rows]
     return urls
 
 
@@ -113,9 +113,9 @@ def check(data):
                             '(url_id, status_code, h1, title, '
                             'description, created_at)'
                             'VALUES (%s, %s, %s, %s, %s, %s) RETURNING id',
-                            (data.get('id'), data.get('status_code'),
+                            (data.get('id'), data.get('code'),
                              data.get('h1'), data.get('title'),
-                             data.get('content'),
+                             data.get('description'),
                              datetime.now())
                             )
                 id_ = cur.fetchone()[0]
@@ -135,14 +135,14 @@ def get_checks(id_):
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as cur:
             cur.execute('SELECT * FROM url_checks '
-                        'WHERE url_id=%s ORDER BY id', (id_,)
+                        'WHERE url_id=%s ORDER BY id DESC', (id_,)
                         )
             rows = cur.fetchall()
     checks = [{'id': row[0],
-               'status': row[2],
+               'code': row[2],
                'h1': treat_none(row[3]),
                'title': treat_none(row[4]),
-               'content': treat_none(row[5]),
+               'description': treat_none(row[5]),
                'date': timestamp_to_date(row[6])} for row in rows]
 
     return checks
@@ -159,7 +159,7 @@ def parse_seo_data(url: str):
 
     seo_data = {'h1': treat_none(h1),
                 'title': treat_none(title),
-                'content': content
+                'description': content
                 }
 
     return seo_data
