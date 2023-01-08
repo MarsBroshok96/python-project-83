@@ -76,6 +76,7 @@ def check_url(id):
 #   response = requests.get(url['name'])
     try:
         response = requests.get(url['name'])
+        response.raise_for_status()
         seo_data = db.parse_seo_data(url['name'])
         db.check({'id': id,
                   'code': response.status_code,
