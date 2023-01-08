@@ -44,7 +44,6 @@ def urls_post():
     if db.get_id_if_exist(url):
         old_id = db.get_id_if_exist(url)[0]
         flash('Страница уже существует', 'alert-info')
-# msgs = get_flashed_messages(with_categories=True)
 
         return redirect(url_for('get_url', id=old_id))
 
@@ -56,7 +55,6 @@ def urls_post():
         return render_template('index.html', url=url, msgs=msgs), 500
 
     flash('Страница успешно добавлена', 'alert-success')
-# msgs = get_flashed_messages(with_categories=True)
 
     return redirect(url_for('get_url', id=new_id))
 
@@ -73,7 +71,6 @@ def get_url(id):
 @app.post('/urls/<int:id>/checks')
 def check_url(id):
     url = db.find_url(id)
-#   response = requests.get(url['name'])
     try:
         response = requests.get(url['name'])
         response.raise_for_status()

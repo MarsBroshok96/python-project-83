@@ -13,6 +13,7 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 
 def timestamp_to_date(ts_date):
     """
+    Converts timestamp into acceptable format for mankind.
     """
     res = None if ts_date is None else date.fromtimestamp(ts_date.timestamp())
     return res
@@ -20,6 +21,7 @@ def timestamp_to_date(ts_date):
 
 def normalize_url(url):
     """
+    Get url and returns one with only scheme and netloc (using urlib.parse).
     """
     parsed_url = urlparse(url)
     norm_url = parsed_url._replace(path='',
@@ -33,6 +35,7 @@ def normalize_url(url):
 
 def get_id_if_exist(url):
     """
+    Get url and returns id from database if exist else returns None.
     """
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as cur:
@@ -45,6 +48,8 @@ def get_id_if_exist(url):
 
 def add_url(url):
     """
+    Get url and inserts it into database.
+    Returns row id if success, else None.
     """
     if get_id_if_exist(url):
         return None
@@ -65,6 +70,7 @@ def add_url(url):
 
 def get_urls():
     """
+    Returns urls from database in list of dicts format.
     """
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as cur:
@@ -91,6 +97,7 @@ def treat_none(data):
 
 def find_url(id_):
     """
+    Get id and returns row (dict) from database by id.
     """
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as cur:
@@ -105,6 +112,8 @@ def find_url(id_):
 
 def check(data):
     """
+    Get data(dict with seo info) and iserts url-check into database.
+    Returns row id on success, else None.
     """
     try:
         with psycopg2.connect(DATABASE_URL) as conn:
@@ -131,6 +140,7 @@ def check(data):
 
 def get_checks(id_):
     """
+    Get id and returns results of checks (list of dicts) from database.
     """
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as cur:
@@ -150,12 +160,11 @@ def get_checks(id_):
 
 def parse_seo_data(url: str):
     """
+    Get url and returns dict with h1, title, content from url(using requests).
     """
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
     h1 = '' if soup.h1 is None else soup.h1.get_text()
-#   h1 = soup.h1.get_text()
     title = '' if soup.title is None else soup.title.get_text()
-#   title = soup.title.get_text()
     content_raw = soup.find("meta", attrs={'name': 'description'})
     content = '' if content_raw is None else content_raw['content']
 
