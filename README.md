@@ -8,20 +8,20 @@
 
 ### "Page Analyzer" is webapp made with Python using flask framework, where you can test your websites with SEO checks.
 
-## Stack:
+## Stack
 
-### + Python 3.10
-### + Flask 2.2.2
-### + PostgreSQL 14.5
-### + Bootstrap 5.3.0
++ Python 3.10
++ Flask 2.2.2
++ PostgreSQL 14.5
++ Bootstrap 5.3.0
 
-## Additional packages:
+## Additional packages
 
-### + gunicorn
-### + psycopg2
-### + python-dotenv
-### + validators
-### + requests
-### + beautifulsoup
++ gunicorn
++ psycopg2
++ python-dotenv
++ validators
++ requests
++ beautifulsoup
 
 For checking demo build follow [this link](https://marspageanalyzer.up.railway.app/).
