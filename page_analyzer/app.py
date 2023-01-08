@@ -6,6 +6,7 @@ from flask import (Flask, render_template, url_for,
 from validators import url as is_correct
 import page_analyzer.db_logic as db
 import requests
+from requests import exceptions as exc
 
 
 load_dotenv()
@@ -72,9 +73,9 @@ def get_url(id):
 @app.post('/urls/<int:id>/checks')
 def check_url(id):
     url = db.find_url(id)
-    response = requests.get(url['name'])
+#   response = requests.get(url['name'])
     try:
-        response.raise_for_status()
+        response = requests.get(url['name'])
         seo_data = db.parse_seo_data(url['name'])
         db.check({'id': id,
                   'status_code': response.status_code,
@@ -86,7 +87,7 @@ def check_url(id):
 
         return redirect(url_for('get_url', id=id))
 
-    except requests.exceptions.HTTPError:
+    except (exc.ConnectionError, exc.HTTPError):
         flash('Произошла ошибка при проверке', 'alert-danger')
 
         return redirect(url_for('get_url', id=id))
