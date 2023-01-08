@@ -36,6 +36,8 @@ def urls_post():
 
     if not is_correct(url):
         flash('Некорректный URL', 'alert-danger')
+        if url=='' or url is None:
+            flash('URL обязателен', 'alert-danger')
         msgs = get_flashed_messages(with_categories=True)
 
         return render_template('index.html', url=url, msgs=msgs), 422
@@ -50,10 +52,10 @@ def urls_post():
 
     new_id = db.add_url(url)[0]
     if new_id is None:
-        flash('Something wrong', 'alert-danger')
+        flash('Произошла ошибка', 'alert-danger')
         msgs = get_flashed_messages(with_categories=True)
 
-        return render_template('index.html', url=url, msgs=msgs), 422
+        return render_template('index.html', url=url, msgs=msgs), 500
 
     flash('Страница успешно добавлена', 'alert-success')
 # msgs = get_flashed_messages(with_categories=True)
