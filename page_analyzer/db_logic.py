@@ -152,13 +152,15 @@ def parse_seo_data(url: str):
     """
     """
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    h1 = soup.h1.get_text()
-    title = soup.title.get_text()
+    h1 = '' if soup.h1 is None else soup.h1.get_text()
+#   h1 = soup.h1.get_text()
+    title = '' if soup.title is None else soup.title.get_text()
+#   title = soup.title.get_text()
     content_raw = soup.find("meta", attrs={'name': 'description'})
     content = '' if content_raw is None else content_raw['content']
 
-    seo_data = {'h1': treat_none(h1),
-                'title': treat_none(title),
+    seo_data = {'h1': h1,
+                'title': title,
                 'description': content
                 }
 
