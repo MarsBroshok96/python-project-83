@@ -75,12 +75,12 @@ def check_url(id):
         response = requests.get(url['name'])
         response.raise_for_status()
         seo_data = db.parse_seo_data(url['name'])
-        db.check({'id': id,
-                  'code': response.status_code,
-                  'h1': seo_data['h1'],
-                  'title': seo_data['title'],
-                  'description': seo_data['description'],
-                  })
+        db.make_check({'id': id,
+                       'code': response.status_code,
+                       'h1': seo_data['h1'],
+                       'title': seo_data['title'],
+                       'description': seo_data['description'],
+                       })
         flash('Страница успешно проверена', 'alert-success')
 
         return redirect(url_for('get_url', id=id))

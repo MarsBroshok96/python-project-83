@@ -9,12 +9,8 @@ publish: # publish wo add to PyPi
 	poetry publish --dry-run
 package-install: #install from OS
 	python3 -m pip install --force-reinstall --user dist/*.whl
-lint: #flake8 gendiff dir
+lint: #flake8 page_analyzer dir
 	poetry run flake8 page_analyzer
-test-coverage:
-	poetry run pytest --cov=page_analyzer --cov-report xml
-test:
-	poetry run pytest
 
 PORT ?= 8000
 start:

@@ -2,6 +2,7 @@ import os
 from urllib.parse import urlparse
 from dotenv import load_dotenv
 import psycopg2
+import psycopg2.extras
 from datetime import datetime, date
 from bs4 import BeautifulSoup
 import requests
@@ -41,9 +42,9 @@ def get_id_if_exist(url):
         with conn.cursor() as cur:
             cur.execute('SELECT id FROM urls WHERE name=%s', (url,))
             id = cur.fetchone()
-#        conn.close()
+    conn.close()
 
-        return id
+    return id
 
 
 def add_url(url):
@@ -73,21 +74,23 @@ def get_urls():
     Returns urls from database in list of dicts format.
     """
     with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as cur:
-            cur.execute('SELECT urls.id, urls.name, '
-                        'url_checks.created_at, url_checks.status_code '
-                        'FROM urls LEFT JOIN url_checks '
-                        'ON urls.id=url_checks.url_id '
-                        'AND url_checks.created_at=(SELECT MAX(created_at) '
-                        'FROM url_checks WHERE url_id=urls.id) '
-                        'ORDER BY urls.id DESC'
-                        )
-#           cur.execute('SELECT * FROM urls ORDER BY id')
-            rows = cur.fetchall()
-    urls = [{'id': row[0],
-             'name': row[1],
-             'date': treat_none(timestamp_to_date(row[2])),
-             'code': treat_none(row[3])} for row in rows]
+        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor
+                         ) as nt_cur:
+            nt_cur.execute('SELECT urls.id, urls.name, '
+                           'url_checks.created_at, url_checks.status_code '
+                           'FROM urls LEFT JOIN url_checks '
+                           'ON urls.id=url_checks.url_id '
+                           'AND url_checks.created_at=(SELECT MAX(created_at) '
+                           'FROM url_checks WHERE url_id=urls.id) '
+                           'ORDER BY urls.id DESC'
+                           )
+            rows = nt_cur.fetchall()
+    urls = [{'id': row.id,
+             'name': row.name,
+             'date': treat_none(timestamp_to_date(row.created_at)),
+             'code': treat_none(row.status_code)} for row in rows]
+    conn.close()
+
     return urls
 
 
@@ -100,34 +103,39 @@ def find_url(id_):
     Get id and returns row (dict) from database by id.
     """
     with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as cur:
-            cur.execute('SELECT * FROM urls WHERE id = %s', (id_,))
-            row = cur.fetchone()
+        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor
+                         ) as nt_cur:
+            nt_cur.execute('SELECT * FROM urls WHERE id = %s', (id_,))
+            row = nt_cur.fetchone()
+    conn.close()
+
     return {
-        'id': row[0],
-        'name': row[1],
-        'created_at': timestamp_to_date(row[2])
+        'id': row.id,
+        'name': row.name,
+        'created_at': timestamp_to_date(row.created_at)
     }
 
 
-def check(data):
+def make_check(data):
     """
     Get data(dict with seo info) and iserts url-check into database.
     Returns row id on success, else None.
     """
     try:
         with psycopg2.connect(DATABASE_URL) as conn:
-            with conn.cursor() as cur:
-                cur.execute('INSERT INTO url_checks'
-                            '(url_id, status_code, h1, title, '
-                            'description, created_at)'
-                            'VALUES (%s, %s, %s, %s, %s, %s) RETURNING id',
-                            (data.get('id'), data.get('code'),
-                             data.get('h1'), data.get('title'),
-                             data.get('description'),
-                             datetime.now())
-                            )
-                id_ = cur.fetchone()[0]
+            with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor
+                             ) as nt_cur:
+                nt_cur.execute('INSERT INTO url_checks'
+                               '(url_id, status_code, h1, title, '
+                               'description, created_at)'
+                               'VALUES (%s, %s, %s, %s, %s, %s) RETURNING id',
+                               (data.get('id'), data.get('code'),
+                                data.get('h1'), data.get('title'),
+                                data.get('description'),
+                                datetime.now())
+                               )
+                row = nt_cur.fetchone()
+                id_ = row.id
 
                 return id_
 
@@ -143,17 +151,19 @@ def get_checks(id_):
     Get id and returns results of checks (list of dicts) from database.
     """
     with psycopg2.connect(DATABASE_URL) as conn:
-        with conn.cursor() as cur:
-            cur.execute('SELECT * FROM url_checks '
-                        'WHERE url_id=%s ORDER BY id DESC', (id_,)
-                        )
-            rows = cur.fetchall()
-    checks = [{'id': row[0],
-               'code': row[2],
-               'h1': treat_none(row[3]),
-               'title': treat_none(row[4]),
-               'description': treat_none(row[5]),
-               'date': timestamp_to_date(row[6])} for row in rows]
+        with conn.cursor(cursor_factory=psycopg2.extras.NamedTupleCursor
+                         ) as nt_cur:
+            nt_cur.execute('SELECT * FROM url_checks '
+                           'WHERE url_id=%s ORDER BY id DESC', (id_,)
+                           )
+            rows = nt_cur.fetchall()
+    checks = [{'id': row.id,
+               'code': row.status_code,
+               'h1': treat_none(row.h1),
+               'title': treat_none(row.title),
+               'description': treat_none(row.description),
+               'date': timestamp_to_date(row.created_at)} for row in rows]
+    conn.close()
 
     return checks
 

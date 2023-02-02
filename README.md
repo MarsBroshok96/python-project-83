@@ -8,6 +8,18 @@
 
 ### "Page Analyzer" is webapp made with Python using flask framework, where you can test your websites with SEO checks.
 
+## Installation guide
+
+1. `Git clone` the repo
+2. Create PSQL database with `make create-db`
+3. Create .env file and add variables or using export:
+
+`DATABASE_URL={provider}://{user}:{password}@{host}:{port}/{db}`
+`SECRET_KEY='....'`
+
+4. Run `make dev` (WSGI debug mode) or `make start` (production with gunicorn)
+
+
 ## Stack
 
 + Python 3.10
