@@ -12,7 +12,7 @@
 
 1. `Git clone` the repo
 2. Create PSQL database with `make create-db`
-3. Create .env file and add variables or using export:
+3. Create .env file and add variables or use export:
 
 `DATABASE_URL={provider}://{user}:{password}@{host}:{port}/{db}`
 `SECRET_KEY='....'`

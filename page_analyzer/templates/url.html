@@ -20,7 +20,7 @@
     </table>
 </div>
 <h2 class="mt-5 mb-3">Проверки</h2>
-<form action="/urls/{{ url.id }}/checks" method="post">
+<form action="{{ url_for('check_url', id=url.id) }}" method="post">
     <input class="btn btn-primary" type="submit" value="Запустить проверку">
 </form>
 <div>

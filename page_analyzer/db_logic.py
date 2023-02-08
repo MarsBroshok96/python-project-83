@@ -1,37 +1,13 @@
 import os
-from urllib.parse import urlparse
 from dotenv import load_dotenv
 import psycopg2
 import psycopg2.extras
-from datetime import datetime, date
-from bs4 import BeautifulSoup
-import requests
+from datetime import datetime
+import page_analyzer.data_handlers as data_
 
 
 load_dotenv()
 DATABASE_URL = os.getenv('DATABASE_URL')
-
-
-def timestamp_to_date(ts_date):
-    """
-    Converts timestamp into acceptable format for mankind.
-    """
-    res = None if ts_date is None else date.fromtimestamp(ts_date.timestamp())
-    return res
-
-
-def normalize_url(url):
-    """
-    Get url and returns one with only scheme and netloc (using urlib.parse).
-    """
-    parsed_url = urlparse(url)
-    norm_url = parsed_url._replace(path='',
-                                   params='',
-                                   query='',
-                                   fragment=''
-                                   ).geturl()
-
-    return norm_url
 
 
 def get_id_if_exist(url):
@@ -41,10 +17,10 @@ def get_id_if_exist(url):
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor() as cur:
             cur.execute('SELECT id FROM urls WHERE name=%s', (url,))
-            id = cur.fetchone()
+            id_ = cur.fetchone()
     conn.close()
 
-    return id
+    return id_[0] if id_ else None
 
 
 def add_url(url):
@@ -52,21 +28,20 @@ def add_url(url):
     Get url and inserts it into database.
     Returns row id if success, else None.
     """
-    if get_id_if_exist(url):
-        return None
-    try:
-        with psycopg2.connect(DATABASE_URL) as conn:
-            with conn.cursor() as cur:
-                cur.execute('INSERT INTO urls (name, created_at)'
-                            'VALUES (%s, %s) RETURNING id',
-                            (url, datetime.now())
-                            )
-                id = cur.fetchone()
-                return id
-    except psycopg2.Error:
-        return None
-    finally:
-        conn.close()
+    if not get_id_if_exist(url):
+        try:
+            with psycopg2.connect(DATABASE_URL) as conn:
+                with conn.cursor() as cur:
+                    cur.execute('INSERT INTO urls (name, created_at)'
+                                'VALUES (%s, %s) RETURNING id',
+                                (url, datetime.now())
+                                )
+                    id_ = cur.fetchone()[0]
+                    return id_
+        except psycopg2.Error:
+            return None
+        finally:
+            conn.close()
 
 
 def get_urls():
@@ -87,7 +62,7 @@ def get_urls():
             rows = nt_cur.fetchall()
     urls = [{'id': row.id,
              'name': row.name,
-             'date': treat_none(timestamp_to_date(row.created_at)),
+             'date': treat_none(data_.timestamp_to_date(row.created_at)),
              'code': treat_none(row.status_code)} for row in rows]
     conn.close()
 
@@ -112,11 +87,11 @@ def find_url(id_):
     return {
         'id': row.id,
         'name': row.name,
-        'created_at': timestamp_to_date(row.created_at)
+        'created_at': data_.timestamp_to_date(row.created_at)
     }
 
 
-def make_check(data):
+def add_check(data):
     """
     Get data(dict with seo info) and iserts url-check into database.
     Returns row id on success, else None.
@@ -162,25 +137,7 @@ def get_checks(id_):
                'h1': treat_none(row.h1),
                'title': treat_none(row.title),
                'description': treat_none(row.description),
-               'date': timestamp_to_date(row.created_at)} for row in rows]
+               'date': data_.timestamp_to_date(row.created_at)} for row in rows]
     conn.close()
 
     return checks
-
-
-def parse_seo_data(url: str):
-    """
-    Get url and returns dict with h1, title, content from url(using requests).
-    """
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    h1 = '' if soup.h1 is None else soup.h1.get_text()
-    title = '' if soup.title is None else soup.title.get_text()
-    content_raw = soup.find("meta", attrs={'name': 'description'})
-    content = '' if content_raw is None else content_raw['content']
-
-    seo_data = {'h1': h1,
-                'title': title,
-                'description': content
-                }
-
-    return seo_data
